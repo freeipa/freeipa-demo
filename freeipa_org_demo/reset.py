@@ -99,6 +99,29 @@ def reset(debug, unattended, rebuild, eip, instance_type=ec2_configuration['inst
             reply = yes_no('Terminate {}?'.format(old_instance_id), unattended)
             if reply:
                 ec2_client.disassociate_address(PublicIp=ec2_configuration['instance_elastic_ip'])
+
+                logger.debug("Backing up logs before termination")
+                ssm_client = boto3.client('ssm')
+                commands = ['/root/bin/upload-backup-to-s3.sh']
+                resp = ssm_client.send_command(
+                    DocumentName="AWS-RunShellScript",
+                    Parameters={'commands': commands},
+                    InstanceIds=[old_instance_id],
+                    TimeoutSeconds=60,
+                    Comment="Backup up FreeIPA demo logs"
+                )
+                command_id = resp['Command']['CommandId']
+
+                logger.debug("Waiting until command {} finishes".format(command_id))
+                while True:
+                    r = ssm_client.list_commands(CommandId=command_id)
+                    if r['Commands'][0]['CompletedCount'] > 0:
+                        status = r['Commands'][0]['Status']
+                        logger.debug("Done with status {}".format(status))
+                        break
+                    time.sleep(5)
+
+                logger.debug("Terminate {}".format(old_instance_id))
                 ec2_client.terminate_instances(InstanceIds=[old_instance_id])
             else:
                 logger.debug("Skipping")
@@ -129,7 +152,6 @@ def reset(debug, unattended, rebuild, eip, instance_type=ec2_configuration['inst
             TimeoutSeconds=60,
             Comment="Starting FreeIPA"
         )
-        logger.debug("Result: {}".format(resp))
 
     else:
         logger.debug("Skipping")
