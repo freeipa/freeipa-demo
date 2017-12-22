@@ -1,13 +1,13 @@
 #!/bin/bash
 set -e
-TARGET="/tmp/freeipa-demo-reset.zip"
+TARGET="/tmp/freeipa-org-demo.zip"
 
 echo "Building to $TARGET"
 
 rm -f $TARGET
-zip -q -r $TARGET freeipa_org_demo_reset.py freeipa_org_demo
+zip -q -r $TARGET *.py freeipa_org_demo
 pushd venv/lib/python3.6/site-packages/ > /dev/null
-zip -q -r9 -g /tmp/freeipa-demo-reset.zip .
+zip -q -r9 -g $TARGET .
 popd > /dev/null
 
 echo "Built $TARGET"

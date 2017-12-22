@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import click
-import boto3
 
 from freeipa_org_demo.reset import reset as demo_reset
 from freeipa_org_demo.config import ec2_configuration

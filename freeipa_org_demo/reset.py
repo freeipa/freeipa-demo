@@ -1,25 +1,12 @@
 import time
-import logging
 import boto3
 
-from .utils import yes_no
+from .utils import yes_no, configure_logger
 from .config import ec2_configuration, demo_configuration
 
 def reset(debug, unattended, rebuild, eip, instance_type=ec2_configuration['instance_type']):
     print("Called with", debug, unattended, rebuild, eip, instance_type)
-    logger = logging.getLogger('demo1.freeipa.org')
-    logger.setLevel(logging.WARNING)
-    if debug:
-        logger.setLevel(logging.DEBUG)
-        level = logging.DEBUG
-    else:
-        level = logging.WARNING
-
-    handler = logging.StreamHandler()
-    handler.setLevel(level)
-    formatter = logging.Formatter('%(levelname)s: %(message)s')
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
+    logger = configure_logger(debug)
 
     ec2 = boto3.resource('ec2', region_name=ec2_configuration['ec2_region'])
     ec2_client = boto3.client('ec2', region_name=ec2_configuration['ec2_region'])

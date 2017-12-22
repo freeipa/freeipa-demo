@@ -8,6 +8,8 @@ ec2_configuration = {
 }
 
 demo_configuration = {
+    'dns_zone': 'demo1.freeipa.org',
+    'dns_demo_hostname': 'ipa.demo1.freeipa.org',
     'users': ['admin', 'employee', 'manager', 'helpdesk'],
     'user_password': 'Secret123',
 }
