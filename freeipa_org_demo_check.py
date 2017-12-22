@@ -16,7 +16,7 @@ if __name__ == '__main__':
 # Triggered by Amazon AWS
 def handler(event, context):
     print("Run FreeIPA Demo Check Lambda", event, context)
-    demo_check(debug=True)
+    demo_check(debug=False)
     print("FreeIPA Demo Check Lambda finished")
     return {'message': "FreeIPA Demo check sucessful"}
 
