@@ -71,6 +71,23 @@ def reset(debug, unattended, rebuild, eip, instance_type=ec2_configuration['inst
     except KeyboardInterrupt:
         logger.debug("... continue, interrupted")
 
+    try:
+        logger.debug("Waiting on fully initialized")
+        while True:
+            instance_status_obj = ec2_client.describe_instance_status(InstanceIds=[new_instance_id])
+            instance_status = instance_status_obj['InstanceStatuses'][0]['InstanceStatus']['Status']
+            if instance_status == 'initializing':
+                pass
+            elif instance_status == 'ok':
+                logger.debug("Instance ready")
+                break
+            else:
+                raise RuntimeError("Instance health check failed!")
+
+            time.sleep(5)
+    except KeyboardInterrupt:
+        logger.debug("... continue, interrupted")
+
     if eip:
         logger.debug("Allocate Elastic IP address")
         eip_addrs = ec2_client.describe_addresses(PublicIps=[ec2_configuration['instance_elastic_ip']])
@@ -99,23 +116,6 @@ def reset(debug, unattended, rebuild, eip, instance_type=ec2_configuration['inst
         instance.reload()
     else:
         logger.debug("Skipping EIP allocation")
-
-    try:
-        logger.debug("Waiting on fully initialized")
-        while True:
-            instance_status_obj = ec2_client.describe_instance_status(InstanceIds=[new_instance_id])
-            instance_status = instance_status_obj['InstanceStatuses'][0]['InstanceStatus']['Status']
-            if instance_status == 'initializing':
-                pass
-            elif instance_status == 'ok':
-                logger.debug("Instance ready")
-                break
-            else:
-                raise RuntimeError("Instance health check failed!")
-
-            time.sleep(5)
-    except KeyboardInterrupt:
-        logger.debug("... continue, interrupted")
 
     reply = yes_no('Start FreeIPA?', unattended)
     if reply:
