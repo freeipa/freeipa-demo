@@ -1,5 +1,5 @@
 # FreeIPA Demo
-Tools for building or managing FreeIPA public demo [FreeIPA Public Demo].
+Tools for building or managing [FreeIPA Public Demo].
 
 ## Building
 ### Installing Dependencies
@@ -23,6 +23,7 @@ The resulting zip file then needs to be uploaded via AWS Console.
 ## Usage
 ```
 ./freeipa_org_demo_reset.py --help
+./freeipa_org_demo_check.py --help
 ```
 
    [FreeIPA Public Demo]: <https://www.freeipa.org/page/Demo>
