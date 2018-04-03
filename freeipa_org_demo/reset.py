@@ -74,15 +74,22 @@ def reset(debug, unattended, rebuild, eip, instance_type=ec2_configuration['inst
     try:
         logger.debug("Waiting on fully initialized")
         while True:
-            instance_status_obj = ec2_client.describe_instance_status(InstanceIds=[new_instance_id])
-            instance_status = instance_status_obj['InstanceStatuses'][0]['InstanceStatus']['Status']
-            if instance_status == 'initializing':
-                pass
-            elif instance_status == 'ok':
-                logger.debug("Instance ready")
-                break
+            instance_status_objs = ec2_client.describe_instance_status(InstanceIds=[new_instance_id])
+
+            try:
+                instance_status_obj = instance_status_objs['InstanceStatuses'][0]
+            except IndexError:
+                logger.debug("Cannot retrieve instance {} status, yet".format(new_instance_id))
             else:
-                raise RuntimeError("Instance health check failed!")
+                instance_status = instance_status_obj['InstanceStatus']['Status']
+
+                if instance_status == 'initializing':
+                    pass
+                elif instance_status == 'ok':
+                    logger.debug("Instance ready")
+                    break
+                else:
+                    raise RuntimeError("Instance health check failed!")
 
             time.sleep(5)
     except KeyboardInterrupt:
