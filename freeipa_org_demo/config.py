@@ -1,6 +1,7 @@
 ec2_configuration = {
     'ec2_region': 'eu-central-1',
     'instance_image_name': 'freeipa-demo-*',
+    'instance_instance_name': 'freeipa-org-demo',
     'instance_type': 't2.small',
     'instance_security_groups': ['FreeIPA'],
     'instance_ssh_key': 'id_rsa_freeipa_demo',

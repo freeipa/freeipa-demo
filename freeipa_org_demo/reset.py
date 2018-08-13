@@ -54,6 +54,16 @@ def reset(debug, unattended, rebuild, eip, instance_type=ec2_configuration['inst
         SecurityGroups=ec2_configuration['instance_security_groups'],
         KeyName=ec2_configuration['instance_ssh_key'],
         IamInstanceProfile={'Name': 'freeipa-org-demo-iam'},
+        TagSpecifications=[
+            {
+                'ResourceType': 'instance',
+                'Tags': [
+                    {
+                        'Key': 'Name',
+                        'Value': ec2_configuration['instance_instance_name']
+                    },
+                ]
+            },],
         )
 
     new_instance_id = response['Instances'][0]['InstanceId']
