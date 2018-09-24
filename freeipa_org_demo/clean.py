@@ -4,8 +4,8 @@ import boto3
 from .utils import yes_no, configure_logger
 from .config import ec2_configuration, demo_configuration
 
-def purge_old_instances(debug, instance_name, min_age=0):
-    print("Called with", debug, instance_name, min_age)
+def purge_old_instances(debug, instance_name, min_age=0, dry_run=False):
+    print("Called with", debug, instance_name, min_age, dry_run)
     logger = configure_logger(debug)
 
     ec2 = boto3.resource('ec2', region_name=ec2_configuration['ec2_region'])
@@ -45,7 +45,9 @@ def purge_old_instances(debug, instance_name, min_age=0):
         logger.debug("Instance {}: age {:.0f} seconds".format(instance.id, instance_age))
 
         if instance_age > min_age:
-            logger.info("Instance {}: age {:.0f} is bigger than limit --> PURGE".format(
-                instance.id, instance_age))
+            dry_run_suffix = " [DRY RUN]" if dry_run else ""
+            logger.info("Instance {}: age {:.0f} is bigger than limit --> PURGE{}".format(
+                instance.id, instance_age, dry_run_suffix))
 
-            ec2_client.terminate_instances(InstanceIds=[instance.id])
+            if not dry_run:
+                ec2_client.terminate_instances(InstanceIds=[instance.id])
