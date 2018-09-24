@@ -15,7 +15,9 @@ def purge_old_instances(debug, instance_name, min_age=0):
 
     logger.debug("Looking for instances with name {}".format(instance_name))
     instances = list(ec2.instances.filter(
-        Filters=[{'Name': 'tag:Name', 'Values': [instance_name]}]))
+        Filters=[
+            {'Name': 'instance-state-name', 'Values': ['running']},
+            {'Name': 'tag:Name', 'Values': [instance_name]}]))
 
     count = len(instances)
 
