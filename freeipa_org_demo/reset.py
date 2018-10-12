@@ -4,7 +4,7 @@ import boto3
 from .utils import yes_no, configure_logger
 from .config import ec2_configuration, demo_configuration
 
-def reset(debug, unattended, rebuild, eip, instance_type=ec2_configuration['instance_type']):
+def reset(debug, unattended, maint_mode, rebuild, eip, instance_type=ec2_configuration['instance_type']):
     print("Called with", debug, unattended, rebuild, eip, instance_type)
     logger = configure_logger(debug)
 
@@ -13,16 +13,17 @@ def reset(debug, unattended, rebuild, eip, instance_type=ec2_configuration['inst
     sts = boto3.client('sts')
     ec2_client_id = sts.get_caller_identity().get('Account')
 
-    instances = ec2.instances.all()
-    logger.debug("INSTANCES")
-    for instance in instances:
-        logger.debug("- {} [{}]: AMI {}, key {}, state {}".format(
-            instance.id,
-            instance.instance_type,
-            instance.image_id,
-            instance.key_name,
-            instance.state,
-            ))
+    # Check if maintenance is not being performed
+    if eip:
+        logger.debug("EIP enabled, looking for instances with name {}".format(ec2_configuration['instance_instance_name_maint']))
+        instances = list(ec2.instances.filter(
+            Filters=[
+                {'Name': 'instance-state-name', 'Values': ['running']},
+                {'Name': 'tag:Name', 'Values': [ec2_configuration['instance_instance_name_maint']]}]))
+
+        if instances:
+            logger.error("Found MAINTENANCE instance --> stopping")
+            raise RuntimeError("Cannot reset production EIP instance in maintenance mode")
 
     images = ec2.images.filter(Owners=[ec2_client_id])
     logger.debug("Available images")
@@ -45,6 +46,11 @@ def reset(debug, unattended, rebuild, eip, instance_type=ec2_configuration['inst
     instance_image = image_map[image_map_names[-1]]
     logger.debug("TARGET IMAGE: {} ({})".format(instance_image.id, instance_image.name))
 
+    if maint_mode:
+        instance_name = ec2_configuration['instance_instance_name_maint']
+    else:
+        instance_name = ec2_configuration['instance_instance_name']
+
     response = ec2_client.run_instances(
         ImageId=instance_image.id,
         InstanceType=instance_type,
@@ -60,7 +66,7 @@ def reset(debug, unattended, rebuild, eip, instance_type=ec2_configuration['inst
                 'Tags': [
                     {
                         'Key': 'Name',
-                        'Value': ec2_configuration['instance_instance_name']
+                        'Value': instance_name
                     },
                 ]
             },],
