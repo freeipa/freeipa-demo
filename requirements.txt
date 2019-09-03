@@ -2,3 +2,6 @@ boto3
 click
 dnspython
 requests
+
+pylint
+pep8
